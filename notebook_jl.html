@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>块状记事本示例</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .note-block { 
+        border: 1px solid #ccc; 
+        padding: 10px; 
+        margin-bottom: 10px; 
+        border-radius: 5px; 
+        position: relative;
+    }
+    .delete-btn {
+        position: absolute; 
+        right: 10px; 
+        top: 10px; 
+        cursor: pointer; 
+        color: red;
+    }
+    .merge-checkbox { margin-right: 5px; }
+    button { margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<h2>块状记事本</h2>
+<textarea id="newBlockContent" rows="3" cols="50" placeholder="输入新的记事内容"></textarea><br>
+<button onclick="addBlock()">添加记事</button>
+<button onclick="mergeSelected()">合并选中记事</button>
+
+<div id="noteContainer"></div>
+
+<script>
+let noteBlocks = [];
+let nextId = 1;
+
+// 添加 block
+function addBlock() {
+    const content = document.getElementById('newBlockContent').value.trim();
+    if (!content) return alert("请输入内容");
+    const block = {id: nextId++, content: content};
+    noteBlocks.push(block);
+    document.getElementById('newBlockContent').value = '';
+    renderBlocks();
+}
+
+// 删除 block
+function deleteBlock(id) {
+    noteBlocks = noteBlocks.filter(b => b.id !== id);
+    renderBlocks();
+}
+
+// 渲染 block
+function renderBlocks() {
+    const container = document.getElementById('noteContainer');
+    container.innerHTML = '';
+    noteBlocks.forEach(block => {
+        const div = document.createElement('div');
+        div.className = 'note-block';
+        div.innerHTML = `
+            <input type="checkbox" class="merge-checkbox" data-id="${block.id}">
+            ${block.content}
+            <span class="delete-btn" onclick="deleteBlock(${block.id})">✖</span>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// 合并选中 block
+function mergeSelected() {
+    const checkboxes = document.querySelectorAll('.merge-checkbox:checked');
+    if (checkboxes.length < 2) return alert("请选择至少两个记事合并");
+    let mergedContent = '';
+    const idsToMerge = [];
+    checkboxes.forEach(cb => {
+        const id = parseInt(cb.dataset.id);
+        const block = noteBlocks.find(b => b.id === id);
+        mergedContent += block.content + '\n';
+        idsToMerge.push(id);
+    });
+    // 删除旧 block
+    idsToMerge.forEach(id => deleteBlock(id));
+    // 添加新 block
+    noteBlocks.push({id: nextId++, content: mergedContent.trim()});
+    renderBlocks();
+}
+</script>
+
+</body>
+</html>
